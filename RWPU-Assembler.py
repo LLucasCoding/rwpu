@@ -38,7 +38,7 @@ def frombinary(binary, l2base): # binary to a base which is a power of 2
     else:
         return "[Invalid Base]"
 
-def b2d(binary):
+def b2d(binary): # Binary string to decimal
     binary = list(binary)
     val = 1
     dec = 0
@@ -48,7 +48,7 @@ def b2d(binary):
         val <<= 1
     return dec
 
-def d2b(integer, bits):
+def d2b(integer, bits): # Integer converted to binary string to 'bits' bits
     mask = 1
     strout = ""
     for i in range(bits):
@@ -59,7 +59,7 @@ def d2b(integer, bits):
         mask <<= 1
     return strout
 
-def log2int(integer):
+def log2int(integer): # log2(n) rounded down
     result = -1
     mask = 1
     while mask <= integer:
@@ -67,4 +67,3 @@ def log2int(integer):
         mask <<= 1
     return result
 
-print(d2b(69, log2int(69) + 1))
