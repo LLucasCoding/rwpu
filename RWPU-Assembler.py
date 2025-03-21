@@ -2,11 +2,11 @@ filename = input("Enter file name: ")
 try:
     f = open(filename, "r") # will be replaced by command line argument
 except FileNotFoundError:
-    print("\033[031m\033[01mThe specified filename was not found. Please double check your path and filename\033[0m")
+    print("\033[031m\033[01mThe specified file was not found. Please double check your path and filename\033[0m")
     exit(0)
 lines = f.readlines()
 
-warnlevel = 4 # 0 = silent except at end if error, 1 = errors only, 2 = errors, warnings, 3 = logs, errors, warnings, 4 = verbose; 2 = default
+warnlevel = 2 # 0 = silent except at end if error, 1 = errors only, 2 = errors and warnings, 3 = logs and errors and warnings, 4 = verbose; 2 = default
 
 instruction = 1 # Position of current instruction
 instructionbinary = "" # Binary value for that instruction, which gets pushed to instruction list when it is done.
@@ -98,6 +98,9 @@ def log2int(integer): # log2(n) rounded down
 if filename.split(".")[-1] != "rwpu" or len(filename.split(".")) == 1:
     msg("Warning: Filename specified doesn't end in .rwpu, which is the proper file extension", 2)
 
+if list(lines[-1])[-1] != "\n":
+    lines[-1] += "\n"
+
 for i in lines:
     compilesuccess = True
     line += 1
@@ -128,7 +131,7 @@ for i in lines:
         for j in range(islabel+1, len(brokeninst)):
             if list(brokeninst[j])[0] != "r" and list(brokeninst[j]) != "$":
                 error = True
-                msg("\033[031mArgumentError: Argument {} in add instruction is not a register. ADD parameters are ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}Line {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename), 1)
+                msg("\033[031mArgumentError: Argument '{}' in add instruction is not a register. ADD syntax is: ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}Line {} in file {}\n\033[01m".format(brokeninst[j].split("\n")[0], i, line, filename), 1)
                 compilesuccess = False
                 continue
             argconstructor = ""
@@ -138,7 +141,7 @@ for i in lines:
                 argconstructor = int(argconstructor)
             except ValueError:
                 error = True
-                msg("\033[031mArgumentError: Argument {} does not contain a valid number of type int in ADD instruction.\n{}Line {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename), 1)
+                msg("\033[031mArgumentError: Argument {} does not contain a valid argument of type regaddr in ADD instruction.\n{}Line {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename), 1)
                 continue
             if argconstructor < 0:
                 argconstructor = -argconstructor
@@ -150,10 +153,14 @@ for i in lines:
         if compilesuccess:
             msg("Succesful translation on line {}".format(line), 3)
             msg("Instruction {} added to list.".format(instructionbinary), 4)
+            binaryinstlist.append(instructionbinary)
+            instruction += 1
         msg("Line was: {}".format(i), 4)
     else:
         error = True
         msg("\033[031mOperationNotFoundError: Operation {} was not recognized.\n{}Line {} in file {}\n\033[01m".format(op.upper(), i, line, filename), 1)
         continue
     
-
+if error:
+    msg("The compiler returned an error. The code has not been compiled to machine code.", 0)
+    exit(1)
