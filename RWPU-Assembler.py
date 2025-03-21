@@ -14,6 +14,16 @@ baseref = list("0123456789ABCDEFGHIJKLMNOPQRSTUV") # All characters for bases up
 line = 0 # Line, to tell the user what line to look at when an error occurs
 error = False # Error variable, doesn't write to file or display final code result if there is a fatal error.
 
+def msg(m, level):
+    formatter = ""
+    global warnlevel
+    if level <= 1:
+        formatter = "\033[031m"
+    elif level == 2:
+        formatter = "\033[033m"
+    if level >= warnlevel:
+        print("{}{}\033[01m".format(formatter, m))
+
 def format(n, l): # format integer n to have l places minimum
     n = str(n)
     while len(n) < l:
@@ -82,8 +92,7 @@ def log2int(integer): # log2(n) rounded down
 
 for i in lines:
     line += 1
-    if warnlevel >= 4:
-        print("Starting new line...")
+    msg("Starting new line", 4)
     instructionbinary = ""
     islabel = 0
     if list(i)[0] == "/": # line comment, (line starts with /)
@@ -92,30 +101,25 @@ for i in lines:
         continue
     brokeninst = i.split(" ")
     if list(i)[0] == ".": # if the line is a label
-        if warnlevel >= 4:
-            print("Label found on line")
+        msg("Label found on line", 4)
         labelnames.append(lines.split(" ")[0])
         labelpos.append(instruction)
         if len(brokeninst) == 1: # if the label is alone on it's line, continue to the next line
-            if warnlevel >= 4:
-                print("Label was the only thing found on that line.")
+            msg("Label was the only thing found on that line", 4)
             continue
         islabel = 1
     op = brokeninst[islabel].lower()
-    if warnlevel >= 3:
-        print("Compiling line with operation {}".format(op))
+    msg("Compiling line with operation {}".format(op), 3)
     if op == "add":
         if len(brokeninst)-islabel != 4:
             error = True
-            if warnlevel >= 1:
-                print("\033[031mInstructionLengthError: Operation add has 3 parameters, {} given.\n{}\nLine {} in file {}\n\033[01m".format(len(brokeninst)-1-islabel), i, line, filename)
+            msg("\033[031mInstructionLengthError: Operation add has 3 parameters, {} given.\n{}\nLine {} in file {}\n\033[01m".format(len(brokeninst)-1-islabel, i, line, filename), 1)
             continue
         instructionbinary = "0001" # ADD opcode
         for j in range(islabel, len(brokeninst)):
             if list(brokeninst[j])[0] != "r" and list(brokeninst[j]) != "$":
                 error = True
-                if warnlevel >= 1:
-                    print("\033[031mArgumentError: Argument {} in add instruction is not a register. ADD parameters are ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename))
+                msg("\033[031mArgumentError: Argument {} in add instruction is not a register. ADD parameters are ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename), 1)
                 continue
             argconstructor = ""
             for k in range(1, len(brokeninst[j])):
@@ -124,15 +128,13 @@ for i in lines:
                 argconstructor = int(argconstructor)
             except ValueError:
                 error = True
-                if warnlevel >= 1:
-                    print("\033[031mArgumentError: Argument {} does not contain a valid number of type int in ADD instruction.\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename))
+                msg("\033[031mArgumentError: Argument {} does not contain a valid number of type int in ADD instruction.\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename), 1)
                 continue
             instructionbinary += d2b(argconstructor)
         instructionbinary = formatapp(instructionbinary, 18)
     else:
         error = True
-        if warnlevel >= 1:
-            print("\033[031mOperationNotFoundError: Operation {} was not recognized.\n{}\nLine {} in file {}\n\033[01m".format(op.upper(), i, line, filename))
+        msg("\033[031mOperationNotFoundError: Operation {} was not recognized.\n{}\nLine {} in file {}\n\033[01m".format(op.upper(), i, line, filename), 1)
         continue
     
 
