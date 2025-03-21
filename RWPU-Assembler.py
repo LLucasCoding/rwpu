@@ -1,5 +1,9 @@
 filename = input("Enter file name: ")
-f = open(filename, "r") # will be replaced by command line argument
+try:
+    f = open(filename, "r") # will be replaced by command line argument
+except FileNotFoundError:
+    print("\033[031m\033[01mThe specified filename was not found. Please double check your path and filename\033[0m")
+    exit(0)
 lines = f.readlines()
 
 warnlevel = 2 # 0 = silent except at end if error, 1 = errors only, 2 = errors, warnings, 3 = logs, errors, warnings, 4 = verbose
@@ -22,7 +26,7 @@ def msg(m, level):
     elif level == 2:
         formatter = "\033[033m"
     if level >= warnlevel:
-        print("{}{}\033[01m".format(formatter, m))
+        print("{}{}\033[0m".format(formatter, m))
 
 def format(n, l): # format integer n to have l places minimum
     n = str(n)
@@ -96,8 +100,7 @@ for i in lines:
     instructionbinary = ""
     islabel = 0
     if list(i)[0] == "/": # line comment, (line starts with /)
-        if warnlevel >= 4:
-            print("Comment on line {}".format(line))
+        msg("Comment on line {}".format(line), 4)
         continue
     brokeninst = i.split(" ")
     if list(i)[0] == ".": # if the line is a label
