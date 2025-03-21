@@ -1,12 +1,17 @@
+from time import time
+
 filename = input("Enter file name: ")
 try:
     f = open(filename, "r") # will be replaced by command line argument
 except FileNotFoundError:
     print("\033[031m\033[01mThe specified file was not found. Please double check your path and filename\033[0m")
     exit(0)
+
+start = time()
+
 lines = f.readlines()
 
-warnlevel = 2 # 0 = silent except at end if error, 1 = errors only, 2 = errors and warnings, 3 = logs and errors and warnings, 4 = verbose; 2 = default
+warnlevel = 4 # 0 = silent except at end if error, 1 = errors only, 2 = errors and warnings, 3 = logs and errors and warnings, 4 = verbose; 2 = default
 
 instruction = 1 # Position of current instruction
 instructionbinary = "" # Binary value for that instruction, which gets pushed to instruction list when it is done.
@@ -16,7 +21,7 @@ labelpos = [] # List of label positions
 stackdepth = 0 # To track stack overflow
 baseref = list("0123456789ABCDEFGHIJKLMNOPQRSTUV") # All characters for bases up to 32
 line = 0 # Line, to tell the user what line to look at when an error occurs
-error = False # Error variable, doesn't write to file or display final code result if there is a fatal error.
+error = 0 # Error variable, doesn't write to file or display final code result if there is a fatal error.
 compilesuccess = True # If a line was compiled properly
 
 def msg(m, level):
@@ -111,6 +116,10 @@ for i in lines:
         msg("Comment on line {}".format(line), 4)
         continue
     brokeninst = i.split(" ")
+    if brokeninst[0] == "\n":
+        msg("Line is empty. Continuing to next line", 4)
+        continue
+
     msg("Broken instruction: {}".format(brokeninst), 4)
     if list(i)[0] == ".": # if the line is a label
         msg("Label found on line", 4)
@@ -124,13 +133,13 @@ for i in lines:
     msg("Compiling line with operation {}".format(op), 3)
     if op == "add":
         if len(brokeninst)-islabel != 4:
-            error = True
+            error += 1
             msg("\033[031mInstructionLengthError: Operation add has 3 parameters, {} arguments given.\n{}Line {} in file {}\n\033[01m".format(len(brokeninst)-1-islabel, i, line, filename), 1)
             continue
         instructionbinary = "0001" # ADD opcode
         for j in range(islabel+1, len(brokeninst)):
             if list(brokeninst[j])[0] != "r" and list(brokeninst[j]) != "$":
-                error = True
+                error += 1
                 msg("\033[031mArgumentError: Argument '{}' in add instruction is not a register. ADD syntax is: ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}Line {} in file {}\n\033[01m".format(brokeninst[j].split("\n")[0], i, line, filename), 1)
                 compilesuccess = False
                 continue
@@ -140,7 +149,7 @@ for i in lines:
             try:
                 argconstructor = int(argconstructor)
             except ValueError:
-                error = True
+                error += 1
                 msg("\033[031mArgumentError: Argument {} does not contain a valid argument of type regaddr in ADD instruction.\n{}Line {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename), 1)
                 continue
             if argconstructor < 0:
@@ -157,10 +166,12 @@ for i in lines:
             instruction += 1
         msg("Line was: {}".format(i), 4)
     else:
-        error = True
+        error += 1
         msg("\033[031mOperationNotFoundError: Operation {} was not recognized.\n{}Line {} in file {}\n\033[01m".format(op.upper(), i, line, filename), 1)
         continue
     
-if error:
-    msg("The compiler returned an error. The code has not been compiled to machine code.", 0)
+if error != 0:
+    msg("The compiler returned {} error(s). The code has not been compiled to machine code.".format(error), 0)
     exit(1)
+
+msg(".rwpu reading and translation took %.6f seconds."%(time()-start), 3)
