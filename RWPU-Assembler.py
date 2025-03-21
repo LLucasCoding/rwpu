@@ -1,11 +1,14 @@
-#f = open(input("Enter file name: "), "r")
-#lines = f.readlines()
+f = open(input("Enter file name: "), "r")
+lines = f.readlines()
 
 instruction = 1
 labelnames = []
 labelpos = []
 stackdepth = 0
 baseref = list("0123456789ABCDEFGHIJKLMNOPQRSTUV")
+
+compiled = []
+bareinst = []
 
 def format(n, l): # format integer n to have l places minimum
     n = str(n)
@@ -66,4 +69,14 @@ def log2int(integer): # log2(n) rounded down
         result += 1
         mask <<= 1
     return result
+
+for i in lines:
+    if list(i)[0] == "/": # line comment, (line starts with /)
+        continue
+    brokeninst = i.split(" ")
+    if list(i)[0] == ".": # if the line is a label
+        labelnames.append(lines.split(" ")[0])
+        labelpos.append(instruction)
+        if len(brokeninst) == 1: # if the label is alone on it's line, continue to the next line
+            continue
 
