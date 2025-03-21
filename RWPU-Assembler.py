@@ -1,11 +1,14 @@
-f = open(input("Enter file name: "), "r")
+f = open(input("Enter file name: "), "r") # will be replaced by command line argument
 lines = f.readlines()
 
 instruction = 1
+instructionbinary = ""
 labelnames = []
 labelpos = []
 stackdepth = 0
 baseref = list("0123456789ABCDEFGHIJKLMNOPQRSTUV")
+line = 0
+error = False
 
 compiled = []
 bareinst = []
@@ -71,6 +74,9 @@ def log2int(integer): # log2(n) rounded down
     return result
 
 for i in lines:
+    line += 1
+    instructionbinary = ""
+    islabel = 0
     if list(i)[0] == "/": # line comment, (line starts with /)
         continue
     brokeninst = i.split(" ")
@@ -79,4 +85,14 @@ for i in lines:
         labelpos.append(instruction)
         if len(brokeninst) == 1: # if the label is alone on it's line, continue to the next line
             continue
+        islabel = 1
+    op = brokeninst[islabel].lower()
+    if op == "add":
+        # addition code
+        pass
+    else:
+        error = True
+        print("Compiler Error: Operation {} on line {} was not recognized. Please refer to ISA for list of instructions and pseudoinstructions.".format(op, line))
+        exit(0)
+    
 
