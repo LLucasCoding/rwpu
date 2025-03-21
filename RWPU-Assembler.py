@@ -2,6 +2,8 @@ filename = input("Enter file name: ")
 f = open(filename, "r") # will be replaced by command line argument
 lines = f.readlines()
 
+warnlevel = 2 # 0 = silent except at end if error, 1 = errors only, 2 = errors, warnings, 3 = logs, errors, warnings, 4 = verbose
+
 instruction = 1 # Position of current instruction
 instructionbinary = "" # Binary value for that instruction, which gets pushed to instruction list when it is done.
 binaryinstlist = [] # Final binary instruction list
@@ -80,28 +82,40 @@ def log2int(integer): # log2(n) rounded down
 
 for i in lines:
     line += 1
+    if warnlevel >= 4:
+        print("Starting new line...")
     instructionbinary = ""
     islabel = 0
     if list(i)[0] == "/": # line comment, (line starts with /)
+        if warnlevel >= 4:
+            print("Comment on line {}".format(line))
         continue
     brokeninst = i.split(" ")
     if list(i)[0] == ".": # if the line is a label
+        if warnlevel >= 4:
+            print("Label found on line")
         labelnames.append(lines.split(" ")[0])
         labelpos.append(instruction)
         if len(brokeninst) == 1: # if the label is alone on it's line, continue to the next line
+            if warnlevel >= 4:
+                print("Label was the only thing found on that line.")
             continue
         islabel = 1
     op = brokeninst[islabel].lower()
+    if warnlevel >= 3:
+        print("Compiling line with operation {}".format(op))
     if op == "add":
         if len(brokeninst)-islabel != 4:
             error = True
-            print("\033[031mInstructionLengthError: Operation add has 3 parameters, {} given.\n{}\nLine {} in file {}\n\033[01m".format(len(brokeninst)-1-islabel), i, line, filename)
+            if warnlevel >= 1:
+                print("\033[031mInstructionLengthError: Operation add has 3 parameters, {} given.\n{}\nLine {} in file {}\n\033[01m".format(len(brokeninst)-1-islabel), i, line, filename)
             continue
         instructionbinary = "0001" # ADD opcode
         for j in range(islabel, len(brokeninst)):
             if list(brokeninst[j])[0] != "r" and list(brokeninst[j]) != "$":
                 error = True
-                print("\033[031mArgumentError: Argument {} in add instruction is not a register. ADD parameters are ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename))
+                if warnlevel >= 1:
+                    print("\033[031mArgumentError: Argument {} in add instruction is not a register. ADD parameters are ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename))
                 continue
             argconstructor = ""
             for k in range(1, len(brokeninst[j])):
@@ -110,13 +124,15 @@ for i in lines:
                 argconstructor = int(argconstructor)
             except ValueError:
                 error = True
-                print("\033[031mArgumentError: Argument {} does not contain a valid number of type int in ADD instruction.\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename))
+                if warnlevel >= 1:
+                    print("\033[031mArgumentError: Argument {} does not contain a valid number of type int in ADD instruction.\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename))
                 continue
             instructionbinary += d2b(argconstructor)
         instructionbinary = formatapp(instructionbinary, 18)
     else:
         error = True
-        print("\033[031mOperationNotFoundError: Operation {} was not recognized.\n{}\nLine {} in file {}\n\033[01m".format(op.upper(), i, line, filename))
-        exit(0)
+        if warnlevel >= 1:
+            print("\033[031mOperationNotFoundError: Operation {} was not recognized.\n{}\nLine {} in file {}\n\033[01m".format(op.upper(), i, line, filename))
+        continue
     
 
