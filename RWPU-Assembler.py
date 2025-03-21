@@ -1,17 +1,15 @@
 f = open(input("Enter file name: "), "r") # will be replaced by command line argument
 lines = f.readlines()
 
-instruction = 1
-instructionbinary = ""
-labelnames = []
-labelpos = []
-stackdepth = 0
-baseref = list("0123456789ABCDEFGHIJKLMNOPQRSTUV")
-line = 0
-error = False
-
-compiled = []
-bareinst = []
+instruction = 1 # Position of current instruction
+instructionbinary = "" # Binary value for that instruction, which gets pushed to instruction list when it is done.
+binaryinstlist = [] # Final binary instruction list
+labelnames = [] # List of all labels
+labelpos = [] # List of label positions
+stackdepth = 0 # To track stack overflow
+baseref = list("0123456789ABCDEFGHIJKLMNOPQRSTUV") # All characters for bases up to 32
+line = 0 # Line, to tell the user what line to look at when an error occurs
+error = False # Error variable, doesn't write to file or display final code result if there is a fatal error.
 
 def format(n, l): # format integer n to have l places minimum
     n = str(n)
