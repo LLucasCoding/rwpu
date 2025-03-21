@@ -1,4 +1,5 @@
-f = open(input("Enter file name: "), "r") # will be replaced by command line argument
+filename = input("Enter file name: ")
+f = open(filename, "r") # will be replaced by command line argument
 lines = f.readlines()
 
 instruction = 1 # Position of current instruction
@@ -15,6 +16,12 @@ def format(n, l): # format integer n to have l places minimum
     n = str(n)
     while len(n) < l:
         n = "0" + n
+    return n
+
+def formatapp(n, l): # add 0 at end of string until length requirement
+    n = str(n)
+    while len(n) < l:
+        n += "0"
     return n
 
 def frombinary(binary, l2base): # binary to a base which is a power of 2
@@ -86,11 +93,30 @@ for i in lines:
         islabel = 1
     op = brokeninst[islabel].lower()
     if op == "add":
-        # addition code
-        pass
+        if len(brokeninst)-islabel != 4:
+            error = True
+            print("\033[031mInstructionLengthError: Operation add has 3 parameters, {} given.\n{}\nLine {} in file {}\n\033[01m".format(len(brokeninst)-1-islabel), i, line, filename)
+            continue
+        instructionbinary = "0001" # ADD opcode
+        for j in range(islabel, len(brokeninst)):
+            if list(brokeninst[j])[0] != "r" and list(brokeninst[j]) != "$":
+                error = True
+                print("\033[031mArgumentError: Argument {} in add instruction is not a register. ADD parameters are ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename))
+                continue
+            argconstructor = ""
+            for k in range(1, len(brokeninst[j])):
+                argconstructor += list(brokeninst[j])[k]
+            try:
+                argconstructor = int(argconstructor)
+            except ValueError:
+                error = True
+                print("\033[031mArgumentError: Argument {} does not contain a valid number of type int in ADD instruction.\n{}\nLine {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename))
+                continue
+            instructionbinary += d2b(argconstructor)
+        instructionbinary = formatapp(instructionbinary, 18)
     else:
         error = True
-        print("Compiler Error: Operation {} on line {} was not recognized. Please refer to ISA for list of instructions and pseudoinstructions.".format(op, line))
+        print("\033[031mOperationNotFoundError: Operation {} was not recognized.\n{}\nLine {} in file {}\n\033[01m".format(op.upper(), i, line, filename))
         exit(0)
     
 
