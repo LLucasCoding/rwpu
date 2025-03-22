@@ -36,9 +36,9 @@ for i in configlines:
 
 verbosity = max(0, verbosity)
 try:
-    f = open(source, "r") # will be replaced by command line argument
+    f = open(source, "r")
 except FileNotFoundError:
-    print("\033[031m\033[01mThe specified source file was not found. Please double check your path and filename\033[0m")
+    print("\033[031m\033[01mThe specified source file ({}) was not found. Please double check your path and filename in .config file.\033[0m".format(source))
     exit(0)
 
 start = time()
@@ -278,6 +278,7 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
             values.append(checkout[1])
     if error == 0:
         msg("Succesful compile, line {}".format(linenum), 3)
+    msg("Values from checkline: {}".format(values), 4)
     return values
 
 if source.split(".")[-1] == "rwpumc":
@@ -329,11 +330,52 @@ for i in lines:
     for j in range(islabel, len(brokeninst)):
         intofunc.append(brokeninst[j])
     msg("Sending {} into checkline".format(intofunc), 4)
-    if op == "add":
+    if op == "add": # reg1 + reg2 -> reg3
         vals = checkline(intofunc, "rrr", line)
-        msg("Recived values {}.".format(vals), 4)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
+            msg("Instruction address {} added".format(instruction), 4)
+            instruction += 1
+    elif op == "addc": # reg1 + reg2 + 1 -> reg3
+        vals = checkline(intofunc, "rrr", line)
+        if error == 0:
+            instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "01"
+            msg("Instruction address {} added".format(instruction), 4)
+            instruction += 1
+    elif op == "addr": # (reg1 + reg2) >> 1 -> reg3
+        vals = checkline(intofunc, "rrr", line)
+        if error == 0:
+            instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
+            msg("Instruction address {} added".format(instruction), 4)
+            instruction += 1
+    elif op == "addrc" or op == "addcr": # (reg1 + reg2 + 1) >> 1 -> reg3
+        vals = checkline(intofunc, "rrr", line)
+        if error == 0:
+            instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "11"
+            msg("Instruction address {} added".format(instruction), 4)
+            instruction += 1
+    elif op == "cpy": # reg1 -> reg2
+        vals = checkline(intofunc, "rr", line)
+        if error == 0:
+            instructionbinary = "0001" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "00"
+            msg("Instruction address {} added".format(instruction), 4)
+            instruction += 1
+    elif op == "inc": # reg1 + 1 -> reg2
+        vals = checkline(intofunc, "rr", line)
+        if error == 0:
+            instructionbinary = "0001" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "01"
+            msg("Instruction address {} added".format(instruction), 4)
+            instruction += 1
+    elif op == "incr": # reg1 + 1 -> reg1
+        vals = checkline(intofunc, "r", line)
+        if error == 0:
+            instructionbinary = "0001" + d2b(vals[0], 4) + "0000" + d2b(vals[0], 4) + "01"
+            msg("Instruction address {} added".format(instruction), 4)
+            instruction += 1
+    elif op == "lsh": # reg1 << 1 -> reg2
+        vals = checkline(intofunc, "rr", line)
+        if error == 0:
+            instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[0], 4) + d2b(vals[1], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     else:
