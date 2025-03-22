@@ -178,10 +178,12 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
     values = []
     line = ""
     for i in broken:
-        line += i + " "
+        line += i
+        if list(i)[-1] != "\n":
+            line += " "
     global error
     if len(operands)+1 != len(broken):
-        msg("SyntaxError: Expecting {} operands, got {}. (Are there trailing whitespaces?)\n{}\nLine {} in input file.".format(len(operands), len(broken) - 1, line, linenum), 1)
+        msg("SyntaxError: Expecting {} operands, got {}. (Are there trailing whitespaces?)\n{}Line {} in input file.".format(len(operands), len(broken) - 1, line, linenum), 1)
         error += 1
         for i in range(len(operands)):
             values.append(0)
@@ -190,7 +192,7 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
         if operands[i-1] == "i": # Integer
             checkout = checkint(broken[i])
             if checkout[0] == 1:
-                msg("ValueError: Expecting integer, got {} instead.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
+                msg("ValueError: Expecting integer, got {} instead.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
                 msg("Warning: Integer {} on line {} is below -128 (Below signed 8-bit integer limit)", 2)
@@ -202,10 +204,10 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
         elif operands[i-1] == "r": # Register
             checkout = checkreg(broken[i])
             if checkout[0] == 1:
-                msg("ValueError: Expecting register, got {}. Valid register prefixes are r and $.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
+                msg("ValueError: Expecting register, got {}. Valid register prefixes are r and $.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
-                msg("RegisterNotFoundError: Register {} does not exist.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
+                msg("RegisterNotFoundError: Register {} does not exist.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 3:
                 msg("Warning: Register {} on line {} was negative. It has been converted to a valid register ({})".format(broken[i].split("\n")[0], linenum, checkout[1]), 2)
@@ -217,20 +219,20 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
         elif operands[i-1] == "l":
             checkout = checklabel(broken[i])
             if checkout[0] == 1:
-                msg("ValueError: Expecting label, got {}. Valid label prefix is '.'.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
+                msg("ValueError: Expecting label, got {}. Valid label prefix is '.'.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
-                msg("LabelNotFoundError: Label {} has not been created yet.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum))
+                msg("LabelNotFoundError: Label {} has not been created yet.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum))
             else:
                 msg("Operand label value good", 4)
             values.append(checkout[1])
         elif operands[i-1] == "a":
             checkout = checkaddr(broken[i])
             if checkout[0] == 1:
-                msg("ValueError: Expecting instruction address, got {}. Valid addr prefix is #.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
+                msg("ValueError: Expecting instruction address, got {}. Valid addr prefix is #.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
-                msg("AddressError: Given address {} is not a valid address. Please retry with an integer.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
+                msg("AddressError: Given address {} is not a valid address. Please retry with an integer.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
             elif checkout[0] == 3:
                 msg("Warning: Given instruction address {} on line {} was negative, it was switched to address {}.".format(broken[i].split("\n")[0], linenum, checkout[1]), 2)
             elif checkout[0] == 4:
@@ -285,8 +287,8 @@ for i in lines:
     op = brokeninst[islabel].lower()
     msg("Compiling line with operation {}".format(op), 3)
     intofunc = []
-    for i in range(islabel, len(brokeninst)):
-        intofunc.append(brokeninst[i])
+    for j in range(islabel, len(brokeninst)):
+        intofunc.append(brokeninst[j])
     msg("Sending {} into checkline".format(intofunc), 4)
     if op == "add":
         vals = checkline(intofunc, "rrr", line)
