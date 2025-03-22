@@ -427,43 +427,43 @@ for i in lines:
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     elif op == "xor": # reg1 ^ reg2 -> reg3
-        vals = checkline(intofunc, "rrr")
+        vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0011" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     elif op == "xorr": # (reg1 ^ reg2) >> 1 -> reg3
-        vals = checkline(intofunc, "rrr")
+        vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0011" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     elif op == "and": # reg1 & reg2 -> reg3
-        vals = checkline(intofunc, "rrr")
+        vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0100" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     elif op == "andr": # (reg1 & reg2) >> 1 -> reg3
-        vals = checkline(intofunc, "rrr")
+        vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0100" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     elif op == "nor": # ~ (reg1 | reg2) -> reg3
-        vals = checkline(intofunc, "rrr")
+        vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0101" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     elif op == "norr": # (~ (reg1 ^ reg2)) >> 1 -> reg3
-        vals = checkline(intofunc, "rrr")
+        vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0101" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     elif op == "ldi": # int1 -> reg2
-        vals = checkline(intofunc, "ir")
+        vals = checkline(intofunc, "ir", line)
         if error == 0:
             instructionbinary = "0110" + d2b(vals[0], 8) + d2b(vals[1], 4) + "00"
     else:
