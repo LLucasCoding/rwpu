@@ -178,14 +178,19 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
     values = []
     line = ""
     for i in broken:
-        line += i
+        line += i + " "
     global error
-
-    for i in range(1, len(operands)):
-        if operands[i] == "i": # Integer
+    if len(operands)+1 != len(broken):
+        msg("SyntaxError: Expecting {} operands, got {}. (Are there trailing whitespaces?)\n{}\nLine {} in input file.".format(len(operands), len(broken) - 1, line, linenum), 1)
+        error += 1
+        for i in range(len(operands)):
+            values.append(0)
+        return values
+    for i in range(1, len(operands) + 1):
+        if operands[i-1] == "i": # Integer
             checkout = checkint(broken[i])
             if checkout[0] == 1:
-                msg("ValueError: Expecting integer, got {} instead.\n{}\nLine {} in input file.".format(broken[i], line, linenum), 1)
+                msg("ValueError: Expecting integer, got {} instead.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
                 msg("Warning: Integer {} on line {} is below -128 (Below signed 8-bit integer limit)", 2)
@@ -194,44 +199,44 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
             else:
                 msg("Operand integer value good", 4)
             values.append(checkout[1])
-        elif operands[i] == "r": # Register
+        elif operands[i-1] == "r": # Register
             checkout = checkreg(broken[i])
             if checkout[0] == 1:
-                msg("ValueError: Expecting register, got {}. Valid register prefixes are r and $.\n{}\nLine {} in input file.".format(broken[i], line, linenum), 1)
+                msg("ValueError: Expecting register, got {}. Valid register prefixes are r and $.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
-                msg("RegisterNotFoundError: Register {} does not exist.\n{}\nLine {} in input file.".format(broken[i], line, linenum), 1)
+                msg("RegisterNotFoundError: Register {} does not exist.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 3:
-                msg("Warning: Register {} on line {} was negative. It has been converted to a valid register ({})".format(broken[i], linenum, checkout[1]), 2)
+                msg("Warning: Register {} on line {} was negative. It has been converted to a valid register ({})".format(broken[i].split("\n")[0], linenum, checkout[1]), 2)
             elif checkout[0] == 4:
-                msg("Warning: Register {} on line {} was above 15. The value has been truncated to the bottom 4 bits. ({})".format(broken[i], line, linenum, checkout[1]), 2)
+                msg("Warning: Register {} on line {} was above 15. The value has been truncated to the bottom 4 bits. ({})".format(broken[i].split("\n")[0], line, linenum, checkout[1]), 2)
             else:
                 msg("Operand register value good", 4)
             values.append(checkout[1])
-        elif operands[i] == "l":
+        elif operands[i-1] == "l":
             checkout = checklabel(broken[i])
             if checkout[0] == 1:
-                msg("ValueError: Expecting label, got {}. Valid label prefix is '.'.\n{}\nLine {} in input file.".format(broken[i], line, linenum), 1)
+                msg("ValueError: Expecting label, got {}. Valid label prefix is '.'.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
-                msg("LabelNotFoundError: Label {} has not been created yet.\n{}\nLine {} in input file.".format(broken[i], line, linenum))
+                msg("LabelNotFoundError: Label {} has not been created yet.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum))
             else:
                 msg("Operand label value good", 4)
             values.append(checkout[1])
-        elif operands[i] == "a":
+        elif operands[i-1] == "a":
             checkout = checkaddr(broken[i])
             if checkout[0] == 1:
-                msg("ValueError: Expecting instruction address, got {}. Valid addr prefix is #.\n{}\nLine {} in input file.".format(broken[i], line, linenum), 1)
+                msg("ValueError: Expecting instruction address, got {}. Valid addr prefix is #.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
-                msg("AddressError: Given address {} is not a valid address. Please retry with an integer.\n{}\nLine {} in input file.".format(broken[i], line, linenum), 1)
+                msg("AddressError: Given address {} is not a valid address. Please retry with an integer.\n{}\nLine {} in input file.".format(broken[i].split("\n")[0], line, linenum), 1)
             elif checkout[0] == 3:
-                msg("Warning: Given instruction address {} on line {} was negative, it was switched to address {}.".format(broken[i], linenum, checkout[1]), 2)
+                msg("Warning: Given instruction address {} on line {} was negative, it was switched to address {}.".format(broken[i].split("\n")[0], linenum, checkout[1]), 2)
             elif checkout[0] == 4:
                 msg("Warning: Given instruction address on line {} was 0. Instruction line 0 is always a NOP.".format(linenum), 2)
             elif checkout[0] == 5:
-                msg("Warning: Given instruction address {} on line {} was above 1023. It has been truncated to the bottom 10 bits. ({})".format(broken[i], linenum, checkout[1]))
+                msg("Warning: Given instruction address {} on line {} was above 1023. It has been truncated to the bottom 10 bits. ({})".format(broken[i].split("\n")[0], linenum, checkout[1]))
             else:
                 msg("Operand address value good", 4)
             values.append(checkout[1])
@@ -244,7 +249,7 @@ if filename.split(".")[-1] == "rwpumc":
 elif filename.split(".")[-1] != "rwpu" or len(filename.split(".")) == 1:
     msg("Warning: Filename specified doesn't end in .rwpu, which is the proper file extension", 2)
 
-if list(lines[-1])[-1] != "\n":
+if list(lines[len(lines)-1])[-1] != "\n":
     lines[-1] += "\n"
 
 for i in lines:
@@ -270,52 +275,33 @@ for i in lines:
                 validlabel = False
                 msg("LabelError: Label {} has already been created.\n{}Line {} in input file".format(brokeninst[0], i, line))
         if validlabel:
-            labelnames.append(lines.split(" ")[0])
+            labelnames.append(i.split(" ")[0])
             labelpos.append(instruction)
+            msg("Label added to instruction address {}".format(instruction), 4)
         if len(brokeninst) == 1: # if the label is alone on it's line, continue to the next line
             msg("Label was the only thing found on that line", 4)
             continue
         islabel = 1
     op = brokeninst[islabel].lower()
     msg("Compiling line with operation {}".format(op), 3)
+    intofunc = []
+    for i in range(islabel, len(brokeninst)):
+        intofunc.append(brokeninst[i])
+    msg("Sending {} into checkline".format(intofunc), 4)
     if op == "add":
-        if len(brokeninst)-islabel != 4:
-            error += 1
-            msg("\033[031mInstructionLengthError: Operation add has 3 parameters, {} arguments given.\n{}Line {} in file {}\n\033[01m".format(len(brokeninst)-1-islabel, i, line, filename), 1)
-            continue
-        instructionbinary = "0001" # ADD opcode
-        for j in range(islabel+1, len(brokeninst)):
-            if list(brokeninst[j])[0] != "r" and list(brokeninst[j]) != "$":
-                error += 1
-                msg("\033[031mArgumentError: Argument '{}' in add instruction is not a register. ADD syntax is: ADD regA regB regOut.\nValid prefixes for register argument: r $\n{}Line {} in file {}\n\033[01m".format(brokeninst[j].split("\n")[0], i, line, filename), 1)
-                compilesuccess = False
-                continue
-            argconstructor = ""
-            for k in range(1, len(brokeninst[j])):
-                argconstructor += list(brokeninst[j])[k]
-            try:
-                argconstructor = int(argconstructor)
-            except ValueError:
-                error += 1
-                msg("\033[031mArgumentError: Argument {} does not contain a valid argument of type regaddr in ADD instruction.\n{}Line {} in file {}\n\033[01m".format(brokeninst[j], i, line, filename), 1)
-                continue
-            if argconstructor < 0:
-                argconstructor = -argconstructor
-                msg("Register values in arguments on line {} ({}) have been switched to positive numbers".format(line, i), 2)
-            if argconstructor > 16:
-                msg("Register values on line {} ({}) have been truncated to the bottom 4 bits.".format(line, i), 2)
-            instructionbinary += d2b(argconstructor, 4)
-        instructionbinary = formatapp(instructionbinary, 18)
-        if compilesuccess:
-            msg("Succesful translation on line {}".format(line), 3)
-            msg("Instruction {} added to list.".format(instructionbinary), 4)
-            binaryinstlist.append(instructionbinary)
+        vals = checkline(intofunc, "rrr", line)
+        msg("Recived values {}.".format(vals), 4)
+        if error == 0:
+            instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
+            msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
-        msg("Line was: {}".format(i), 4)
     else:
         error += 1
-        msg("\033[031mOperationNotFoundError: Operation {} was not recognized.\n{}Line {} in file {}\n\033[01m".format(op.upper(), i, line, filename), 1)
+        msg("\033[031mInvalidOperationError: Operation {} was not recognized.\n{}Line {} in input file.\n\033[01m".format(op.upper(), i, line), 1)
         continue
+    if error == 0:
+        msg("Instruction binary: {}".format(instructionbinary), 4)
+    binaryinstlist.append(instructionbinary) # Add the instruction to the list of instructions
     
 if error != 0:
     msg("The compiler returned {} error(s). The code has not been compiled to machine code.".format(error), 0)
