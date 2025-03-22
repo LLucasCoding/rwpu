@@ -1,24 +1,58 @@
 from time import time
 
-filename = input("Enter file name: ")
+configfile = open(".config", "r")
+configlines = configfile.readlines()
+# set defaults
+verbosity = 2 # 0 = minimum, 1 = errors only, 2 = warnings and errors, 3 = all log messages, 4 = verbose
+source = "source.rwpu"
+output = "output.rwpumc"
+consolebase = 0 # 0 = no mc printing, 1 = binary, 2 = quatric, 3 = octal, 4 = hexadecimal, 5 = base 32
+for i in configlines:
+    if (len(i) > 1):
+        i = i.split("\n")[0]
+        setting = i.split(" ")[0]
+        val = i.split(" ")[1]
+        if setting == "source":
+            source = val
+        elif setting == "output":
+            output = val
+        elif setting == "verbosity":
+            try:
+                val = int(val)
+            except ValueError:
+                print("\033[031m\033[01mConfig file error: Verbosity value is not an integer.\033[0m")
+                exit(1)
+            verbosity = val
+        elif setting == "consolebase":
+            try:
+                val = int(val)
+            except ValueError:
+                print("\033[031m\033[01mConfig file error: Console base value is not an integer.\033[0m")
+                exit(1)
+            consolebase = val
+        else:
+            print("\033[031m\033[01mConfig file error: Unknown setting {}. Please read documentation.\033[0m".format(i))
+            exit(1)
+
+verbosity = max(0, verbosity)
 try:
-    f = open(filename, "r") # will be replaced by command line argument
+    f = open(source, "r") # will be replaced by command line argument
 except FileNotFoundError:
-    print("\033[031m\033[01mThe specified file was not found. Please double check your path and filename\033[0m")
+    print("\033[031m\033[01mThe specified source file was not found. Please double check your path and filename\033[0m")
     exit(0)
 
 start = time()
 
 lines = f.readlines()
+f.close()
 
-warnlevel = 4 # 0 = silent except at end if error, 1 = errors only, 2 = errors and warnings, 3 = logs and errors and warnings, 4 = verbose; 2 = default
+f = open(output, "w")
 
 instruction = 1 # Position of current instruction
 instructionbinary = "" # Binary value for that instruction, which gets pushed to instruction list when it is done.
 binaryinstlist = [] # Final binary instruction list
 labelnames = [] # List of all labels
 labelpos = [] # List of label positions
-stackdepth = 0 # To track stack overflow
 baseref = list("0123456789ABCDEFGHIJKLMNOPQRSTUV") # All characters for bases up to 32
 line = 0 # Line, to tell the user what line to look at when an error occurs
 error = 0 # Error variable, doesn't write to file or display final code result if there is a fatal error.
@@ -26,12 +60,12 @@ compilesuccess = True # If a line was compiled properly
 
 def msg(m, level):
     formatter = ""
-    global warnlevel
+    global verbosity
     if level <= 1:
         formatter = "\033[031m"
     elif level == 2:
         formatter = "\033[033m"
-    if level <= warnlevel:
+    if level <= verbosity:
         print("{}{}\033[0m".format(formatter, m))
 
 def format(n, l): # format integer n to have l places minimum
@@ -246,10 +280,15 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
         msg("Succesful compile, line {}".format(linenum), 3)
     return values
 
-if filename.split(".")[-1] == "rwpumc":
-    msg("Warning: Filename specified ends in .rwpumc, which is the machine code file extension, not the assembly file extension.", 2)
-elif filename.split(".")[-1] != "rwpu" or len(filename.split(".")) == 1:
-    msg("Warning: Filename specified doesn't end in .rwpu, which is the proper file extension", 2)
+if source.split(".")[-1] == "rwpumc":
+    msg("Warning: Source filename specified ends in .rwpumc, which is the machine code file extension, not the assembly file extension.", 2)
+elif source.split(".")[-1] != "rwpu" or len(source.split(".")) == 1:
+    msg("Warning: Source filename specified doesn't end in .rwpu, which is the proper file extension", 2)
+
+if output.split(".")[-1] == "rwpu":
+    msg("Warning: Output filename ends in .rwpu, which is the assembly file extension, not the machine code file extension.", 2)
+elif output.split(".")[1] != "rwpumc" or len(output.split(".")) == 1:
+    msg("Warning: Output filename specified doesn't end in .rwpumc, which is the proper file extension", 2)
 
 if list(lines[len(lines)-1])[-1] != "\n":
     lines[-1] += "\n"
@@ -310,3 +349,21 @@ if error != 0:
     exit(1)
 
 msg(".rwpu reading and translation took %.6f seconds."%(time()-start), 3)
+
+start = time()
+
+for i in binaryinstlist:
+    msg("Writing code {} to output".format(i), 4)
+    f.write(i + "\n")
+f.close()
+msg(".rwpumc writing took %.6f seconds"%(time()-start), 3)
+
+consolebase = min(5, max(0, consolebase))
+
+if consolebase != 0:
+    bases = ["","binary (base 2)","quatric (base 4)","octal (base 8)","hexadecimal (base 16)","base 32"]
+    print("Here is the machine code in console in {}:\n------------".format(bases[consolebase]))
+    for i in binaryinstlist:
+        print(frombinary(i, consolebase))
+    print("------------")
+    print("\033[032mDone!\033[0m")
