@@ -212,7 +212,7 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
             elif checkout[0] == 3:
                 msg("Warning: Register {} on line {} was negative. It has been converted to a valid register ({})".format(broken[i].split("\n")[0], linenum, checkout[1]), 2)
             elif checkout[0] == 4:
-                msg("Warning: Register {} on line {} was above 15. The value has been truncated to the bottom 4 bits. ({})".format(broken[i].split("\n")[0], line, linenum, checkout[1]), 2)
+                msg("Warning: Register {} on line {} was above 15. The value has been truncated to the bottom 4 bits. ({})".format(broken[i].split("\n")[0], linenum, checkout[1]), 2)
             else:
                 msg("Operand register value good", 4)
             values.append(checkout[1])
