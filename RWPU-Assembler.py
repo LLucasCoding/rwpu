@@ -206,7 +206,43 @@ def checkint(s):
         return (0, s)
     except ValueError:
         return (1, 0) # Not an integer
+
+def checkcond(s):
+    s = s.lower()
+    for i in ["always", "alw", "1", "true", "yes"]: # Condition 0
+        if s == i:
+            return (0, 0)
         
+    for i in ["never", "nev", "false", "no"]: # Condition 1
+        if s == i:
+            return (1, 1)
+    
+    for i in ["zero", "z", "eq", "0", "equal"]: # Condition 2
+        if s == i:
+            return (0, 2)
+    
+    for i in ["nonzero", "nz", "!zero", "ne", "notequal", "!equal"]: # Condition 3
+        if s == i:
+            return (0, 3)
+    
+    for i in ["cout", "overflow", "of", "co", "carryout"]: # Condition 4
+        if s == i:
+            return (0, 4)
+    
+    for i in ["!cout", "nocarryout", "!carryout", "nooverflow", "nof", "!co"]: # Condition 5
+        if s == i:
+            return (0, 5)
+    
+    for i in ["negative", "neg", "!positive", "!pos", "notpos", "notpositive"]: # Condition 6
+        if s == i:
+            return (0, 6)
+    
+    for i in ["positive", "pos", "!negative", "!neg", "notneg", "notnegative"]: # Condition 7
+        if s == i:
+            return (0, 7)
+    
+    return (2, 1)
+
 def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a: absolute inst address, l: label
     operands = list(operands)
     values = []
@@ -276,6 +312,13 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
             else:
                 msg("Operand address value good", 4)
             values.append(checkout[1])
+        elif operands[i-1] == "c":
+            checkout = checkcond(broken[i])
+            if checkout[0] == 1:
+                msg("Warning: Given condition {} on line {} assures the condition will never be met. This line is redundant.".format(broken[i].split("\n")[0], linenum))
+            elif checkout[0] == 2:
+                msg("InvalidConditionError: {} is not a valid condition. Please check documentation.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum))
+                error += 1
     if error == 0:
         msg("Succesful compile, line {}".format(linenum), 3)
     msg("Values from checkline: {}".format(values), 4)
@@ -466,6 +509,12 @@ for i in lines:
         vals = checkline(intofunc, "ir", line)
         if error == 0:
             instructionbinary = "0110" + d2b(vals[0], 8) + d2b(vals[1], 4) + "00"
+            instruction += 1
+    elif op == "jmp":
+        vals = checkline(intofunc, "lc", line)
+        if error == 0:
+            instructionbinary = "0111" + d2b(vals[0], 10) + d2b(vals[1], 3) + "0"
+            instruction += 1
     else:
         error += 1
         msg("\033[031mInvalidOperationError: Operation {} was not recognized.\n{}Line {} in input file.\n\033[01m".format(op.upper(), i, line), 1)
