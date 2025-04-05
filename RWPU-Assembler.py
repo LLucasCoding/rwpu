@@ -14,7 +14,7 @@ for i in configlines:
         val = i.split(" ")[1]
         if setting == "source":
             source = val
-        elif setting == "output":
+        elif setting == "mcode":
             output = val
         elif setting == "verbosity":
             try:
@@ -165,8 +165,7 @@ def checkreg(s): # Returns (errcode, strippedval)
 def checklabel(s):
     if list(s)[0] != ".":
         return (1, 0) # womp womp, it's not a label
-    valid = False
-    global labelnames
+    global labelnames, labelpos
     for i in range(len(labelnames)):
         if labelnames[i] == s:
             return (0, labelpos[i]) # Success
@@ -208,7 +207,7 @@ def checkint(s):
         return (1, 0) # Not an integer
 
 def checkcond(s):
-    s = s.lower()
+    s = s.lower().split("\n")[0]
     for i in ["always", "alw", "1", "true", "yes"]: # Condition 0
         if s == i:
             return (0, 0)
@@ -292,7 +291,8 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
                 msg("ValueError: Expecting label, got {}. Valid label prefix is '.'.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
-                msg("LabelNotFoundError: Label {} has not been created yet.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum))
+                msg("LabelNotFoundError: Label {} has not been created yet.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
+                error += 1
             else:
                 msg("Operand label value good", 4)
             values.append(checkout[1])
@@ -315,10 +315,11 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
         elif operands[i-1] == "c":
             checkout = checkcond(broken[i])
             if checkout[0] == 1:
-                msg("Warning: Given condition {} on line {} assures the condition will never be met. This line is redundant.".format(broken[i].split("\n")[0], linenum))
+                msg("Warning: Given condition {} on line {} assures the condition will never be met. This line is redundant.".format(broken[i].split("\n")[0], linenum), 1)
             elif checkout[0] == 2:
-                msg("InvalidConditionError: {} is not a valid condition. Please check documentation.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum))
+                msg("InvalidConditionError: {} is not a valid condition. Please check documentation.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
+            values.append(checkout[1])
     if error == 0:
         msg("Succesful compile, line {}".format(linenum), 3)
     msg("Values from checkline: {}".format(values), 4)
@@ -337,6 +338,29 @@ elif output.split(".")[1] != "rwpumc" or len(output.split(".")) == 1:
 if list(lines[len(lines)-1])[-1] != "\n":
     lines[-1] += "\n"
 
+labelindex = 1
+for i in lines: # Label detection
+    if list(i)[0] == ".": # if the line is a label
+        brokeninst = i.split(" ")
+        msg("Label found on line", 4)
+        validlabel = True
+        for j in labelnames:
+            if brokeninst[0] == j:
+                validlabel = False
+                msg("LabelError: Label {} has already been created.\n{}Line {} in input file".format(brokeninst[0], i, line))
+        if validlabel:
+            labelnames.append(i.split(" ")[0].split("\n")[0])
+            labelpos.append(labelindex)
+            msg("Label added to instruction address {}".format(labelindex), 4)
+        if len(brokeninst) == 1: # if the label is alone on it's line, continue to the next line
+            msg("Label was the only thing found on that line", 4)
+        else:
+            labelindex += 1
+    elif list(i)[0] != "/" and len(i) > 1:
+        msg("Line had no label.", 4)
+        labelindex += 1
+
+
 for i in lines:
     compilesuccess = True
     line += 1
@@ -353,16 +377,6 @@ for i in lines:
 
     msg("Broken instruction: {}".format(brokeninst), 4)
     if list(i)[0] == ".": # if the line is a label
-        msg("Label found on line", 4)
-        validlabel = True
-        for j in labelnames:
-            if brokeninst[0] == j:
-                validlabel = False
-                msg("LabelError: Label {} has already been created.\n{}Line {} in input file".format(brokeninst[0], i, line))
-        if validlabel:
-            labelnames.append(i.split(" ")[0])
-            labelpos.append(instruction)
-            msg("Label added to instruction address {}".format(instruction), 4)
         if len(brokeninst) == 1: # if the label is alone on it's line, continue to the next line
             msg("Label was the only thing found on that line", 4)
             continue
@@ -433,7 +447,7 @@ for i in lines:
             instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
-    elif op == "subc": # reg1 - reg2 - 1 -> reg3
+    elif op == "subc" or op == "sbb" or op == "subb": # reg1 - reg2 - 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
@@ -445,7 +459,7 @@ for i in lines:
             instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
-    elif op == "subrc" or op == "subcr": # (reg1 - reg2 - 1) >> 1 -> reg3
+    elif op == "subrc" or op == "subcr" or op == "sbbr" or op == "sbr" or op == "sbrb": # (reg1 - reg2 - 1) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "11"
@@ -542,6 +556,7 @@ consolebase = min(5, max(0, consolebase))
 if consolebase != 0:
     bases = ["","binary (base 2)","quatric (base 4)","octal (base 8)","hexadecimal (base 16)","base 32"]
     print("Here is the machine code in console in {}:\n------------".format(bases[consolebase]))
+    del bases
     for i in binaryinstlist:
         print(frombinary(i, consolebase))
     print("------------")

@@ -4,8 +4,9 @@
 ## Implemented
 Addition, Subtraction, Bitwise Related.
 
-## Implemented but not tested
+## Implemented but WIP
 JMP with conditions
+Conversion from machine code to schematic
 
 ## To be implemented
-Conversion from machine code to schematic
+Instructions 8 through 15...

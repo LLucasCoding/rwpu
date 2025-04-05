@@ -1,1 +1,3 @@
-ldi -1 r3
+jmp .test always
+.test
+jmp .test zero
