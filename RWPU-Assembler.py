@@ -513,7 +513,7 @@ for i in lines:
             instructionbinary = "0101" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
-    elif op == "norr": # (~ (reg1 ^ reg2)) >> 1 -> reg3
+    elif op == "norr" or op == "nrr": # (~ (reg1 ^ reg2)) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0101" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
@@ -529,6 +529,45 @@ for i in lines:
         if error == 0:
             instructionbinary = "0111" + d2b(vals[0], 10) + d2b(vals[1], 3) + "0"
             instruction += 1
+    elif op == "cal" or op == "call":
+        vals = checkline(intofunc, "l", line)
+        if error == 0:
+            instructionbinary = "1000" + d2b(vals[0], 10) + "0000"
+            instruction += 1
+    elif op == "ret" or op == "return":
+        if error == 0:
+            instructionbinary = "100100000000000000"
+            instruction += 1
+    elif op == "str":
+        vals = checkline(intofunc, "rr", line)
+        if error == 0:
+            instructionbinary = "1010" + d2b(vals[0], 4) + d2b(vals[1], 4) + "000000"
+            instruction += 1
+    elif op == "lod" or op == "load":
+        vals = checkline(intofunc, "rr", line)
+        if error == 0:
+            instructionbinary = "1011" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "00"
+            instruction += 1
+    elif op == "pou" or op == "pout":
+        vals = checkline(intofunc, "rr", line)
+        if error == 0:
+            instructionbinary = "1100" + d2b(vals[0], 4) + d2b(vals[1], 4) + "000000"
+            instruction += 1
+    elif op == "pin":
+        vals = checkline(intofunc, "rr", line)
+        if error == 0:
+            instructionbinary = "1101" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "00"
+            instruction += 1
+    elif op == "prq" or op == "req":
+        vals = checkline(intofunc, "r", line)
+        if error == 0:
+            instructionbinary = "1110" + d2b(vals[0], 4) + "0000000000"
+            instruction += 1
+    elif op == "hlt" or op == "halt" or op == "stp" or op == "stop":
+        if error == 0:
+            instructionbinary = "111100000000000000"
+            instruction += 1
+    
     else:
         error += 1
         msg("\033[031mInvalidOperationError: Operation {} was not recognized.\n{}Line {} in input file.\n\033[01m".format(op.upper(), i, line), 1)
