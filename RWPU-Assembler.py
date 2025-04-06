@@ -5,14 +5,14 @@ configlines = configfile.readlines()
 # set defaults
 verbosity = 2 # 0 = minimum, 1 = errors only, 2 = warnings and errors, 3 = all log messages, 4 = verbose
 source = "source.rwpu"
-output = "output.rwpumc"
+output = "mcode.rwpumc"
 consolebase = 0 # 0 = no mc printing, 1 = binary, 2 = quatric, 3 = octal, 4 = hexadecimal, 5 = base 32
 for i in configlines:
     if (len(i) > 1):
         i = i.split("\n")[0]
         setting = i.split(" ")[0]
         val = i.split(" ")[1]
-        if setting == "source":
+        if setting == "asm":
             source = val
         elif setting == "mcode":
             output = val
@@ -30,7 +30,7 @@ for i in configlines:
                 print("\033[031m\033[01mConfig file error: Console base value is not an integer.\033[0m")
                 exit(1)
             consolebase = val
-        else:
+        elif not (setting == "schemfolder" or setting == "schemname" or setting == "schem" or setting == "maxline"):
             print("\033[031m\033[01mConfig file error: Unknown setting {}. Please read documentation.\033[0m".format(i))
             exit(1)
 
@@ -125,14 +125,6 @@ def d2b(integer, bits): # Integer converted to binary string to 'bits' bits
             strout = "1" + strout
         mask <<= 1
     return strout
-
-def log2int(integer): # log2(n) rounded down
-    result = -1
-    mask = 1
-    while mask <= integer:
-        result += 1
-        mask <<= 1
-    return result
 
 def striparg(s): # Remove first character in a string
     s = list(s)
@@ -387,183 +379,215 @@ for i in lines:
     for j in range(islabel, len(brokeninst)):
         intofunc.append(brokeninst[j])
     msg("Sending {} into checkline".format(intofunc), 4)
+
     if op == "add": # reg1 + reg2 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "addc": # reg1 + reg2 + 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "01"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "addr": # (reg1 + reg2) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "addrc" or op == "addcr": # (reg1 + reg2 + 1) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "11"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "cpy": # reg1 -> reg2
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "inc": # reg1 + 1 -> reg2
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "01"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "incr": # reg1 + 1 -> reg1
         vals = checkline(intofunc, "r", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + "0000" + d2b(vals[0], 4) + "01"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "lsh": # reg1 << 1 -> reg2
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[0], 4) + d2b(vals[1], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "rsh": # reg >> 1 -> reg2
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "sub": # reg1 - reg2 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "subc" or op == "sbb" or op == "subb": # reg1 - reg2 - 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "subr": # (reg1 - reg2) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "subrc" or op == "subcr" or op == "sbbr" or op == "sbr" or op == "sbrb": # (reg1 - reg2 - 1) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "11"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "neg": # (- reg1) -> reg2
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "00100000" + d2b(vals[0], 4) + d2b(vals[1], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "dec": # reg1 - 1 -> reg2
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "0010" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "01"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "decr": # reg1 - 1 -> reg1
         vals = checkline(intofunc, "r", line)
         if error == 0:
             instructionbinary = "0010" + d2b(vals[0], 4) + "0000" + d2b(vals[0], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "xor": # reg1 ^ reg2 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0011" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "xorr": # (reg1 ^ reg2) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0011" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "and": # reg1 & reg2 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0100" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "andr": # (reg1 & reg2) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0100" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "nor": # ~ (reg1 | reg2) -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0101" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "norr" or op == "nrr": # (~ (reg1 ^ reg2)) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0101" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
+    
     elif op == "ldi": # int1 -> reg2
         vals = checkline(intofunc, "ir", line)
         if error == 0:
             instructionbinary = "0110" + d2b(vals[0], 8) + d2b(vals[1], 4) + "00"
             instruction += 1
-    elif op == "jmp":
+    
+    elif op == "jmp": # addr -> PC if condition
         vals = checkline(intofunc, "lc", line)
         if error == 0:
             instructionbinary = "0111" + d2b(vals[0], 10) + d2b(vals[1], 3) + "0"
             instruction += 1
-    elif op == "cal" or op == "call":
+    
+    elif op == "cal" or op == "call": # PC + 1 -> stack; addr -> PC
         vals = checkline(intofunc, "l", line)
         if error == 0:
             instructionbinary = "1000" + d2b(vals[0], 10) + "0000"
             instruction += 1
-    elif op == "ret" or op == "return":
+    
+    elif op == "ret" or op == "return": # stack -> PC
         if error == 0:
             instructionbinary = "100100000000000000"
             instruction += 1
-    elif op == "str":
+    
+    elif op == "str": # reg -> RAM @ ptr
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "1010" + d2b(vals[0], 4) + d2b(vals[1], 4) + "000000"
             instruction += 1
-    elif op == "lod" or op == "load":
+    
+    elif op == "lod" or op == "load": # RAM @ ptr -> reg
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "1011" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "00"
             instruction += 1
-    elif op == "pou" or op == "pout":
+    
+    elif op == "pou" or op == "pout": # reg -> PORT @ ptr
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "1100" + d2b(vals[0], 4) + d2b(vals[1], 4) + "000000"
             instruction += 1
-    elif op == "pin":
+    
+    elif op == "pin": # PORT @ ptr -> reg
         vals = checkline(intofunc, "rr", line)
         if error == 0:
             instructionbinary = "1101" + d2b(vals[0], 4) + "0000" + d2b(vals[1], 4) + "00"
             instruction += 1
-    elif op == "prq" or op == "req":
+    
+    elif op == "prq" or op == "req": # Wait until port @ ptr acknowledges request
         vals = checkline(intofunc, "r", line)
         if error == 0:
             instructionbinary = "1110" + d2b(vals[0], 4) + "0000000000"
             instruction += 1
-    elif op == "hlt" or op == "halt" or op == "stp" or op == "stop":
+    
+    elif op == "hlt" or op == "halt" or op == "stp" or op == "stop": # STOP the clock!11!!!11!!1! (help im going insane)
         if error == 0:
             instructionbinary = "111100000000000000"
             instruction += 1
@@ -572,6 +596,7 @@ for i in lines:
         error += 1
         msg("\033[031mInvalidOperationError: Operation {} was not recognized.\n{}Line {} in input file.\n\033[01m".format(op.upper(), i, line), 1)
         continue
+    
     if error == 0:
         msg("Instruction binary: {}".format(instructionbinary), 4)
     binaryinstlist.append(instructionbinary) # Add the instruction to the list of instructions
@@ -600,3 +625,5 @@ if consolebase != 0:
         print(frombinary(i, consolebase))
     print("------------")
     print("\033[032mDone!\033[0m")
+# If you've made it to the end of the code, make sure you like and subscribe and comment! (Yep, I'm definetly going insane)
+
