@@ -380,7 +380,13 @@ for i in lines:
         intofunc.append(brokeninst[j])
     msg("Sending {} into checkline".format(intofunc), 4)
 
-    if op == "add": # reg1 + reg2 -> reg3
+    if op == "nop": # Do nothing
+        if error == 0:
+            instructionbinary = "000000000000000000"
+            msg("Instruction address {} added".format(instruction), 4)
+            instruction += 1
+    
+    elif op == "add": # reg1 + reg2 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "00"
