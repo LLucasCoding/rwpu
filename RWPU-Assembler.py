@@ -373,7 +373,7 @@ for i in lines:
             msg("Label was the only thing found on that line", 4)
             continue
         islabel = 1
-    op = brokeninst[islabel].lower()
+    op = brokeninst[islabel].lower().split("\n")[0]
     msg("Compiling line with operation {}".format(op), 3)
     intofunc = []
     for j in range(islabel, len(brokeninst)):
