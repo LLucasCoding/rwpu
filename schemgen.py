@@ -51,7 +51,7 @@ try:
 except FileNotFoundError:
     log("The .config file does not exist. All settings are at their default values.")
 
-log("Init completed.")
+log("Init completed. Loading schematic module.")
 
 try:
     import mcschematic

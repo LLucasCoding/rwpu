@@ -387,14 +387,14 @@ for i in lines:
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     
-    elif op == "addc": # reg1 + reg2 + 1 -> reg3
+    elif op == "addc" or op == "adc": # reg1 + reg2 + 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "01"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     
-    elif op == "addr": # (reg1 + reg2) >> 1 -> reg3
+    elif op == "addr" or op == "adr": # (reg1 + reg2) >> 1 -> reg3
         vals = checkline(intofunc, "rrr", line)
         if error == 0:
             instructionbinary = "0001" + d2b(vals[0], 4) + d2b(vals[1], 4) + d2b(vals[2], 4) + "10"
@@ -471,6 +471,12 @@ for i in lines:
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     
+    elif op == "cmp": # sreg1 - reg2 -> void
+        vals = checkline(intofunc, "rr", line)
+        if error == 0:
+            instructionbinary = "0010" + d2b(vals[0], 4) + d2b(vals[1], 4) + "000000"
+            instruction += 1
+
     elif op == "neg": # (- reg1) -> reg2
         vals = checkline(intofunc, "rr", line)
         if error == 0:
@@ -488,7 +494,7 @@ for i in lines:
     elif op == "decr": # reg1 - 1 -> reg1
         vals = checkline(intofunc, "r", line)
         if error == 0:
-            instructionbinary = "0010" + d2b(vals[0], 4) + "0000" + d2b(vals[0], 4) + "00"
+            instructionbinary = "0010" + d2b(vals[0], 4) + "0000" + d2b(vals[0], 4) + "01"
             msg("Instruction address {} added".format(instruction), 4)
             instruction += 1
     
