@@ -234,6 +234,22 @@ def checkcond(s):
     
     return (2, 1)
 
+def checkhex(s):
+    hex = tuple("0123456789abcdef")
+    s = s.lower().split("\n")[0]
+    if len(s) != 2:
+        return (1, 0)
+    out = 0
+    for i in tuple(s):
+        out << 4
+        try:
+            out += hex.index(i)
+        except ValueError:
+            return (2, 0)
+    return (0, out)
+
+
+
 def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a: absolute inst address, l: label
     operands = list(operands)
     values = []
@@ -310,6 +326,15 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
                 msg("Warning: Given condition {} on line {} assures the condition will never be met. This line is redundant.".format(broken[i].split("\n")[0], linenum), 1)
             elif checkout[0] == 2:
                 msg("InvalidConditionError: {} is not a valid condition. Please check documentation.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
+                error += 1
+            values.append(checkout[1])
+        elif operands[i-1] == "h":
+            checkout = checkhex(broken[i])
+            if checkout[0] == 1:
+                msg("ValueError: Given hex value {} is invalid. Give a two nibble value such as e7 or 04 instead of {}.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
+                error += 1
+            elif checkout[0] == 2:
+                msg("ValueError: Given hex value {} is invalid. A character in the value is not part of the hex charset.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             values.append(checkout[1])
     if error == 0:
@@ -552,6 +577,12 @@ for i in lines:
             instructionbinary = "0110" + d2b(vals[0], 8) + d2b(vals[1], 4) + "00"
             instruction += 1
     
+    elif op == "ldh": # hex1 -> reg2
+        vals = checkline(intofunc, "hr", line)
+        if error == 0:
+            instructionbinary = "0110" + d2b(vals[0], 8) + d2b(vals[1], 4) + "00"
+            instruction += 1
+
     elif op == "jmp": # addr -> PC if condition
         vals = checkline(intofunc, "lc", line)
         if error == 0:
