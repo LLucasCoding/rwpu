@@ -241,7 +241,7 @@ def checkhex(s):
         return (1, 0)
     out = 0
     for i in tuple(s):
-        out << 4
+        out <<= 4
         try:
             out += hex.index(i)
         except ValueError:
