@@ -1,6 +1,5 @@
 / define logo
 LDI 240 r1
-LDH 80 r2
 LDI 128 r2
 LDI 64 r3
 LDI 32 r4

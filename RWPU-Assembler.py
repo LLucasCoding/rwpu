@@ -248,9 +248,17 @@ def checkhex(s):
             return (2, 0)
     return (0, out)
 
+def checkbin(s):
+    listed = list(s.split("\n")[0])
+    if len(listed) != 8:
+        return (2, 0)
+    for i in listed:
+        if (i != "0") and (i != "1"):
+            return (1, 0)
+    return (0, b2d(s.split("\n")[0]))
 
 
-def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a: absolute inst address, l: label
+def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a: absolute inst address, l: label, c: condition, h: hex value, b: binary value
     operands = list(operands)
     values = []
     line = ""
@@ -335,6 +343,15 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
                 error += 1
             elif checkout[0] == 2:
                 msg("ValueError: Given hex value {} is invalid. A character in the value is not part of the hex charset.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
+                error += 1
+            values.append(checkout[1])
+        elif operands[i-1] == "b":
+            checkout = checkbin(broken[i])
+            if checkout[0] == 1:
+                msg("ValueError: Given binary value {} contains invalid characters. (All chars should be 0 or 1)\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
+                error += 1
+            elif checkout[0] == 2:
+                msg("ValueError: Given binary value {} is longer than 8 characters. (Should be 8 bits, all chars should be 0 or 1)\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             values.append(checkout[1])
     if error == 0:
@@ -579,6 +596,12 @@ for i in lines:
     
     elif op == "ldh": # hex1 -> reg2
         vals = checkline(intofunc, "hr", line)
+        if error == 0:
+            instructionbinary = "0110" + d2b(vals[0], 8) + d2b(vals[1], 4) + "00"
+            instruction += 1
+
+    elif op == "ldb": # bin1 -> reg2
+        vals = checkline(intofunc, "br", line)
         if error == 0:
             instructionbinary = "0110" + d2b(vals[0], 8) + d2b(vals[1], 4) + "00"
             instruction += 1

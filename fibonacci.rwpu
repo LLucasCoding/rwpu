@@ -5,3 +5,4 @@ cpy r2 r3
 cpy r1 r2
 add r2 r3 r1
 jmp .loop !cout
+hlt
