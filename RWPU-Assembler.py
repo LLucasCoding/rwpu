@@ -351,7 +351,7 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
                 msg("ValueError: Given binary value {} contains invalid characters. (All chars should be 0 or 1)\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             elif checkout[0] == 2:
-                msg("ValueError: Given binary value {} is longer than 8 characters. (Should be 8 bits, all chars should be 0 or 1)\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
+                msg("ValueError: Given binary value {} is not 8 characters long. (Should be 8 bits, all chars should be 0 or 1)\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
             values.append(checkout[1])
     if error == 0:
