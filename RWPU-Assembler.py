@@ -161,7 +161,7 @@ def checklabel(s):
     for i in range(len(labelnames)):
         if labelnames[i] == s:
             return (0, labelpos[i]) # Success
-    return (2, 0) # Label not referenced / referenced later
+    return (2, 0) # Label not referenced
 
 def checkaddr(s):
     if list(s)[0] != "#":
@@ -302,7 +302,7 @@ def checkline(broken, operands, linenum): # Operands: r: register, i: integer, a
                 msg("Operand register value good", 4)
             values.append(checkout[1])
         elif operands[i-1] == "l":
-            checkout = checklabel(broken[i])
+            checkout = checklabel(broken[i].split("\n")[0])
             if checkout[0] == 1:
                 msg("ValueError: Expecting label, got {}. Valid label prefix is '.'.\n{}Line {} in input file.\n".format(broken[i].split("\n")[0], line, linenum), 1)
                 error += 1
@@ -385,7 +385,7 @@ for i in lines: # Label detection
         if validlabel:
             labelnames.append(i.split(" ")[0].split("\n")[0])
             labelpos.append(labelindex)
-            msg("Label added to instruction address {}".format(labelindex), 4)
+            msg("Label {} added to instruction address {}".format(labelnames[-1], labelindex), 4)
         if len(brokeninst) == 1: # if the label is alone on it's line, continue to the next line
             msg("Label was the only thing found on that line", 4)
         else:

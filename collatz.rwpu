@@ -1,0 +1,38 @@
+/ Numerical A address
+ldi 3 r1
+/ Numerical B address
+ldi 5 r2
+/ For comparisons
+ldi 1 r15
+/ Request an input from Numpad A
+prq r0
+/ And take in that input
+pin r0 r3
+/ Show it on display to confirm
+pou r1 r3
+
+.loop
+/ Check for even/odd
+and r3 r15 r0
+/ Jump if even
+jmp .even zero
+/ 3x+1
+adc r3 r3 r4
+add r4 r3 r3
+/ Increment iterations
+incr r5
+/ Update displays
+pou r1 r3
+pou r2 r5
+.even
+/ Right shift and increment iterations
+rsh r3 r3
+incr r5
+/ Update displays
+pou r1 r3
+pou r2 r5
+/ See if n = 1
+cmp r3 r15
+jmp .loop nonzero
+
+hlt

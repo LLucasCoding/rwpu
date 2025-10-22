@@ -1,0 +1,7 @@
+ldi 63 r1
+ldi 2 r2
+ldi 11 r3
+.loop
+pou r3 r1
+pou r3 r2
+jmp .loop always

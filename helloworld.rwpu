@@ -1,0 +1,93 @@
+/ h
+ldi 8 r2
+str r1 r2
+incr r1
+
+/ e
+ldi 5 r2
+str r1 r2
+incr r1
+
+/ l
+ldi 12 r2
+str r1 r2
+incr r1
+
+/ l
+str r1 r2
+incr r1
+
+/ o
+ldi 15 r2
+str r1 r2
+incr r1
+
+/ ,
+ldi 44 r2
+str r1 r2
+incr r1
+
+/ space
+str r1 r0
+incr r1
+
+/ w
+ldi 23 r2
+str r1 r2
+incr r1
+
+/ o
+ldi 15 r2
+str r1 r2
+incr r1
+
+/ r
+ldi 18 r2
+str r1 r2
+incr r1
+
+/ l
+ldi 12 r2
+str r1 r2
+incr r1
+
+/ d
+ldi 4 r2
+str r1 r2
+incr r1
+
+/ !
+ldi 28 r2
+str r1 r2
+incr r1
+
+/ get ready to load stuff from RAM
+cpy r1 r3
+ldi 0 r1
+/ data
+ldi 6 r6
+/ pointer
+ldi 7 r7
+/ controls
+ldi 8 r8
+/ write to screen
+ldi 1 r4
+
+.loop
+/ Start by setting pointer - instruction 44
+pou r7 r1
+/ Set data
+lod r1 r5
+pou r6 r5
+/ Buffer
+pou r8 r4
+/ Increment
+incr r1
+cmp r1 r3
+jmp .loop ne
+
+/ Push Buffer, Clear Buffer
+ldi 6 r1
+pou r8 r1
+
+hlt

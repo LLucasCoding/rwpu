@@ -1,0 +1,11 @@
+ldi 3 r15
+ldi 20 r2
+.loop
+cal .increment
+cmp r1 r2
+jmp .loop ne
+hlt
+.increment
+incr r1
+pou r15 r1
+ret

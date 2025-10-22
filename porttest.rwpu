@@ -1,0 +1,7 @@
+ldi 255 r1
+ldi 16 r2
+.loop
+decr r2
+pou r2 r1
+jmp .loop nz
+hlt

@@ -1,0 +1,11 @@
+ldi 0 r4
+ldi 1 r5
+.outloop
+.inloop
+incr r1
+pou r4 r1
+jmp .inloop !cout
+incr r2
+pou r5 r2
+jmp .outloop !cout
+hlt

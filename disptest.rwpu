@@ -1,0 +1,11 @@
+ldi 11 r1
+ldi 59 r2
+ldi 2 r3
+ldi 7 r4
+/ Enable all pixels, set all pixels to 1
+pou r1 r2
+/ Set 0,0 to off, clear buffer
+pou r1 r4
+/ Push buffer
+pou r1 r3
+hlt

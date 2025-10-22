@@ -23,7 +23,7 @@ try:
     log("File closed. Processing settings...")
     for i in configlines:
         if (len(i) > 1):
-            i = i.split("\n")[0]
+            i = i.split("\n")[0]    
             setting = i.split(" ")[0]
             val = i.split(" ")[1]
             if setting == "mcode":
@@ -106,6 +106,7 @@ for i in lines:
 if linenum-1 > maxline:
     log("Warning: Your code exceeds {} instructions ({} instructions.) If you have an upgraded P-ROM, set the maxline value in .config.".format(maxline, linenum-1))
 log("Machine code file done ({} instructions). Populating the rest of the P-ROM with NOPs...".format(linenum-1))
+usage = linenum-1
 l = linenum
 for linenum in range(l, maxline+1):
     for y in range(-2, -37, -2):
@@ -135,5 +136,10 @@ if maxline > 1023:
     log("Warning: The maximum line setting exceeds 1023, which is higher than the Program Counter or ISA can support. (Pasting the schematic can cause unintended consequences.)")
 
 log("Success!")
+
+log("P-ROM usage: {}/{} Kib | {}%".format(round(usage*18/1024, 2), round(maxline*18/1024, 2), round((usage)/maxline*100, 1)))
+usage = min(usage, maxline)
+hashtags = round((usage)/maxline*40)
+log("P-ROM usage: [" + "#"*hashtags + "_"*(40-hashtags) + "]")
 
 # pluh

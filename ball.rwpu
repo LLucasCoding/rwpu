@@ -1,0 +1,35 @@
+pin r0 r1
+ldi 1 r2
+pin r2 r2
+ldi 1 r3
+ldi 1 r4
+ldi 15 r5
+ldi 9 r6
+ldi 10 r7
+ldi 35 r8
+ldi 11 r9
+ldi 1 r10
+.loop
+cmp r1 r5
+jmp .skipx1 nonzero
+ldi -1 r3
+.skipx1
+cmp r2 r5
+jmp .skipy1 nonzero
+ldi -1 r4
+.skipy1
+cmp r0 r1
+jmp .skipx2 nonzero
+ldi 1 r3
+.skipx2
+cmp r0 r2
+jmp .skipy2 nonzero
+ldi 1 r4
+.skipy2
+pou r9 r10
+add r3 r1 r1
+add r4 r2 r2
+pou r6 r1
+pou r7 r2
+pou r9 r8
+jmp .loop always

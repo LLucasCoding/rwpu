@@ -1,0 +1,32 @@
+pin r6 r1
+incr r6
+pin r6 r2
+incr r6
+pin r6 r3
+incr r6
+pin r6 r4
+sub r3 r1 r6
+sub r4 r2 r5
+lsh r5 r5
+sub r5 r6 r7
+lsh r6 r6
+ldi 33 r8
+ldi 9 r9
+ldi 10 r10
+ldi 11 r11
+.loop
+pou r9 r1
+pou r10 r2
+pou r11 r8
+cmp r0 r7
+jmp .endif positive
+incr r2
+sub r7 r6 r7
+.endif
+add r7 r5 r7
+incr r1
+cmp r3 r1
+jmp .loop positive
+ldi 6 r8
+pou r11 r8
+hlt

@@ -1,0 +1,11 @@
+ldi 15 r1
+ldi 3 r2
+ldi 4 r3
+ldi 10 r4
+.loop
+pin r1 r5
+pou r2 r5
+pou r3 r5
+decr r4
+jmp .loop nz
+hlt
