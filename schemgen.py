@@ -64,7 +64,7 @@ schem = mcschematic.MCSchematic()
 log("Schematic object initialized.")
 
 try:
-    f = open(mcfile, "r") # The file from which it reads will be configurable.
+    f = open("programs/" + mcfile, "r") # The file from which it reads will be configurable.
 except FileNotFoundError:
     log("Error: The machine code file {} does not exist.".format(mcfile))
     exit(1)

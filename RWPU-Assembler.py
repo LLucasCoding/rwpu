@@ -36,7 +36,7 @@ for i in configlines:
 
 verbosity = max(0, verbosity)
 try:
-    f = open(source, "r")
+    f = open("programs/" + source, "r")
 except FileNotFoundError:
     print("\033[031m\033[01mThe specified source file ({}) was not found. Please double check your path and filename in .config file.\033[0m".format(source))
     exit(0)
@@ -46,7 +46,7 @@ start = time()
 lines = f.readlines()
 f.close()
 
-f = open(output, "w")
+f = open("programs/" + output, "w")
 
 instruction = 1 # Position of current instruction
 instructionbinary = "" # Binary value for that instruction, which gets pushed to instruction list when it is done.

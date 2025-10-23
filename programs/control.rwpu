@@ -1,0 +1,63 @@
+/ x and y
+ldi 4 r1
+ldi 4 r2
+/ controller
+ldi 6 r15
+/ draw pixel number
+ldi 39 r14
+/ display ports (x, y, ctrl)
+ldi 9 r11
+ldi 10 r12
+ldi 11 r13
+
+
+/ In order to start program, acknowledge request
+prq r15
+
+.loop
+/ Draw pixel
+pou r11 r1
+pou r12 r2
+pou r13 r14
+
+/ Get controller status
+/ r3 is delta x, r4 is delta y
+xor r3 r3 r3
+xor r4 r4 r4
+pin r15 r5
+/ Start actually stops the program here lol
+ldi 128 r6
+and r5 r6 r0
+jmp .stop nonzero
+/ Up
+ldi 8 r6
+and r5 r6 r0
+jmp .skipup zero
+decr r4
+.skipup
+/ Down
+rsh r6 r6
+and r5 r6 r0
+jmp .skipdown zero
+incr r4
+.skipdown
+/ Left
+rsh r6 r6
+and r5 r6 r0
+jmp .skipleft zero
+decr r3
+.skipleft
+/ Right
+rsh r6 r6
+and r5 r6 r0
+jmp .skipright zero
+incr r3
+.skipright
+add r1 r3 r1
+add r2 r4 r2
+jmp .loop alw
+
+.stop
+ldi 2 r14
+pou r13 r14
+hlt
