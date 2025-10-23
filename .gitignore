@@ -1,5 +1,4 @@
-tictactoe.rwpu
-tictactoe.rwpumc
-prqtest.rwpu
-prqtest.rwpumc
-.gitignore
+programs/tictactoe.rwpu
+programs/tictactoe.rwpumc
+programs/prqtest.rwpu
+programs/prqtest.rwpumc
