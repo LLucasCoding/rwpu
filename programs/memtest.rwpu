@@ -1,0 +1,93 @@
+/ Test 1 - All 1s - To test if a 1 signal is lost somewhere
+/ Test 2 - All 0s - To test if a 0 signal is lost somewhere
+/ Test 3 - 10101010 and 01010101 alternating - Test potential interference
+/ Test 4 - address -> RAM[address] - Test misaddressing
+/ Test 5 - Random numbers - Just to be sure
+
+/ r1 - Address
+/ r2 - Value
+/ r3 - Value from RAM
+/ r4 - Test number
+/ Port addrs
+/ r12 - RNG
+/ r0 - Binary A (expected)
+/ r13 - Binary B (retrieved)
+/ r14 - Address number display
+/ r15 - Test Number Display
+
+ldi 15 r12
+ldi 1 r13
+ldi 5 r14
+ldi 3 r15
+
+ldi 1 r4
+pou r15 r4
+ldi -1 r2
+.test1
+pou r14 r1
+str r1 r2
+lod r1 r3
+cmp r2 r3
+jmp .fail ne
+incr r1
+jmp .test1 nof
+
+ldi 2 r4
+pou r15 r4
+ldi 0 r2
+.test2
+pou r14 r1
+str r1 r2
+lod r1 r3
+cmp r2 r3
+jmp .fail ne
+incr r1
+jmp .test2 nof
+
+ldi 3 r4
+pou r15 r4
+ldi 85 r2
+ldi 255 r5
+.test3
+pou r14 r1
+xor r5 r2 r2
+str r1 r2
+lod r1 r3
+cmp r2 r3
+jmp .fail ne
+incr r1
+jmp .test3 nof
+
+ldi 4 r4
+pou r15 r4
+.test4
+pou r14 r1
+cpy r1 r2
+str r1 r2
+lod r1 r3
+cmp r2 r3
+jmp .fail ne
+incr r1
+jmp .test4 nof
+
+ldi 5 r4
+pou r15 r4
+.test5
+pou r14 r1
+pin r12 r2
+str r1 r2
+lod r1 r3
+cmp r2 r3
+jmp .fail ne
+incr r1
+jmp .test5 nof
+
+ldi 69 r4
+pou r15 r4
+pou r14 r0
+hlt
+
+.fail
+pou r0 r2
+pou r13 r3
+hlt
