@@ -1,0 +1,312 @@
+/ Prepare game over for the end of the game
+/ g
+ldi 7 r2
+str r1 r2
+incr r1
+
+/ a
+ldi 1 r2
+str r1 r2
+incr r1
+
+/ m
+ldi 13 r2
+str r1 r2
+incr r1
+
+/ e
+ldi 5 r2
+str r1 r2
+incr r1
+
+/ space
+ldi 0 r2
+str r1 r2
+incr r1
+
+/ o
+ldi 15 r2
+str r1 r2
+incr r1
+
+/ v
+ldi 22 r2
+str r1 r2
+incr r1
+
+/ e
+ldi 5 r2
+str r1 r2
+incr r1
+
+/ r
+ldi 18 r2
+str r1 r2
+incr r1
+
+/ !
+ldi 28 r2
+str r1 r2
+incr r1
+
+/ get ready to load stuff from RAM
+cpy r1 r3
+ldi 0 r1
+/ data
+ldi 6 r6
+/ pointer
+ldi 7 r7
+/ controls
+ldi 8 r8
+/ write to screen
+ldi 1 r4
+/ clear screen
+ldi 2 r15
+pou r8 r15
+
+.looptext
+/ Start by setting pointer
+pou r7 r1
+/ Set data
+lod r1 r5
+pou r6 r5
+/ Buffer
+pou r8 r4
+/ Increment
+incr r1
+cmp r1 r3
+jmp .looptext ne
+
+
+// DEFINE VARIABLES
+/ Y-coord of the top of the paddle
+ldi 6 r1
+/ Vertical speed of ball
+ldi 1 r2
+/ Horizontal speed of ball
+ldi 1 r3
+/ Position of wall
+ldi 15 r4
+/ Score in r5
+/ Ball X, Y
+ldi 4 r6
+ldi 8 r7
+/ RNG, Screen X Y ctrl
+ldi 15 r8
+ldi 9 r9
+ldi 10 r10
+ldi 11 r11
+/ Wall line drawing
+ldi 41 r12
+/ Draw pixel, no buffer push
+ldi 33 r13
+/ Draw pixel, push&clear buffer
+ldi 39 r14
+/ Wow that used hella registers fast
+
+/ Score will be stored in RAM 0
+str r0 r0
+
+cal .drawscreen
+/ Wait for any button to be pressed
+/ dpad
+.wait
+ldi 6 r15
+pin r15 r15
+cmp r0 r15
+jmp .wait eq
+/ Game loop
+.loop
+ldi 6 r15
+pin r15 r15
+
+/ Use r14 for comparisons
+/ Down
+ldi 4 r14
+and r15 r14 r0
+jmp .nodown zero
+incr r1
+/ Clamp value
+ldi 12 r14
+cmp r14 r1
+jmp .validdown ne
+ldi 11 r1
+jmp .doneclamp alw
+.validdown
+nop
+nop
+.doneclamp
+jmp .donedown alw
+.nodown
+nop
+nop
+nop
+nop
+nop
+nop
+.donedown
+
+/ Up
+ldi 8 r14
+and r15 r14 r0
+jmp .noup zero
+decr r1
+/ Clamp value
+ldi -1 r14
+cmp r14 r1
+jmp .validup ne
+ldi 0 r1
+jmp .doneclampup alw
+.validup
+nop
+nop
+.doneclampup
+jmp .doneup alw
+.noup
+nop
+nop
+nop
+nop
+nop
+nop
+.doneup
+/ Process ball velocity
+add r6 r2 r6
+add r7 r3 r7
+
+/ Paddlebounce
+ldi 1 r14
+cmp r6 r14
+jmp .nopaddlebounce ne
+/ Ball height minus paddle height
+sub r7 r1 r15
+/ If the number is negative, the ball is too high
+jmp .failedposcheck neg
+ldi 5 r14
+cmp r15 r14
+/ If r15 >= r14 then the ball is too low!
+jmp .failednegcheck pos
+/ The ball hit the paddle, invert x and y speed
+neg r2 r2
+/ Wall changing logic
+pin r8 r15
+ldi 3 r14
+and r15 r14 r15
+ldi 15 r4
+sub r4 r15 r4
+/ Score
+lod r0 r15
+incr r15
+ldi 3 r14
+pou r14 r15
+str r0 r15
+jmp .donepaddlebounce alw
+.failedposcheck
+nop
+nop
+nop
+.failednegcheck
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+jmp .donepaddlebounce alw
+.nopaddlebounce
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+.donepaddlebounce
+
+/ wallbounce
+dec r4 r14
+cmp r6 r14
+jmp .nowallbounce ne
+neg r2 r2
+jmp .donewallbounce alw
+.nowallbounce
+nop
+nop
+.donewallbounce
+
+/ top and bottom bounces
+cmp r7 r0
+jmp .notopbounce ne
+neg r3 r3
+jmp .donetopbounce alw
+.notopbounce
+nop
+nop
+.donetopbounce
+ldi 15 r14
+cmp r7 r14
+jmp .nobotbounce ne
+neg r3 r3
+jmp .donebotbounce alw
+.nobotbounce
+nop
+nop
+.donebotbounce
+
+/ Restore r14
+ldi 39 r14
+cal .drawscreen
+/ Lose condition
+cmp r6 r0
+jmp .break eq
+jmp .loop alw
+.break
+/ Display game over
+ldi 8 r1
+ldi 6 r2
+pou r1 r2
+hlt
+
+.drawscreen
+/ First pixel of paddle
+pou r9 r0
+pou r10 r1
+pou r11 r13
+/ Second pixel of paddle
+inc r1 r15
+pou r10 r15
+pou r11 r13
+/ Third pixel of paddle
+incr r15
+pou r10 r15
+pou r11 r13
+/ fourth pixel of paddle
+incr r15
+pou r10 r15
+pou r11 r13
+/ last pixel of paddle
+incr r15
+pou r10 r15
+pou r11 r13
+/ Wall
+pou r9 r4
+pou r11 r12
+/ Ball
+pou r9 r6
+pou r10 r7
+pou r11 r14
+ret
